@@ -17,7 +17,7 @@
 package org.axonframework.springboot.aot.autoconfig;
 
 import org.axonframework.axonserver.connector.TargetContextResolver;
-import org.axonframework.messaging.Message;
+import org.axonframework.messaging.core.Message;
 
 /**
  * Context resolver that doesn't rely on lambda's, so it works also when compiling ahead of time.
@@ -26,7 +26,7 @@ import org.axonframework.messaging.Message;
  * @author Gerard Klijs
  * @since 4.8.0
  */
-public class DefaultTargetContextResolver<T extends Message<?>> implements TargetContextResolver<T> {
+public class DefaultTargetContextResolver<T extends Message> implements TargetContextResolver<T> {
 
     private final String context;
 

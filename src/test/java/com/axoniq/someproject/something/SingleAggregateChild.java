@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2023. Axon Framework
+ * Copyright (c) 2010-2025. Axon Framework
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,19 +18,20 @@ package com.axoniq.someproject.something;
 
 import com.axoniq.someproject.SomeBean;
 import com.axoniq.someproject.api.SingleChildCommand;
-import org.axonframework.commandhandling.CommandHandler;
-import org.axonframework.messaging.InterceptorChain;
-import org.axonframework.modelling.command.CommandHandlerInterceptor;
-import org.axonframework.modelling.command.EntityId;
+import org.axonframework.messaging.commandhandling.annotation.CommandHandler;
+import org.axonframework.messaging.core.MessageHandlerInterceptorChain;
+import org.axonframework.messaging.core.interception.annotation.MessageHandlerInterceptor;
+import org.axonframework.messaging.core.unitofwork.ProcessingContext;
+import org.axonframework.modelling.annotation.TargetEntityId;
 
 public record SingleAggregateChild(
-        @EntityId String id,
+        @TargetEntityId String id,
         String property
 ) {
 
-    @CommandHandlerInterceptor
-    public Object intercept(InterceptorChain chain) throws Exception {
-        return chain.proceed();
+    @MessageHandlerInterceptor
+    public Object intercept(MessageHandlerInterceptorChain<?> chain, ProcessingContext processingContext) throws Exception {
+        return chain.proceed(null, processingContext);
     }
 
     @CommandHandler

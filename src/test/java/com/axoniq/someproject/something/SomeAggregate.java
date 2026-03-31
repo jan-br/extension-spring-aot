@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2023. Axon Framework
+ * Copyright (c) 2010-2025. Axon Framework
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,16 +24,15 @@ import com.axoniq.someproject.api.ChildAddedToMapEvent;
 import com.axoniq.someproject.api.SomeCommand;
 import com.axoniq.someproject.api.SomeEvent;
 import com.axoniq.someproject.api.StatusChangedEvent;
-import org.axonframework.commandhandling.CommandHandler;
-import org.axonframework.eventsourcing.EventSourcingHandler;
-import org.axonframework.messaging.InterceptorChain;
-import org.axonframework.messaging.Message;
-import org.axonframework.messaging.interceptors.ExceptionHandler;
-import org.axonframework.modelling.command.AggregateIdentifier;
-import org.axonframework.modelling.command.AggregateMember;
-import org.axonframework.modelling.command.AggregateRoot;
-import org.axonframework.modelling.command.CommandHandlerInterceptor;
-import org.axonframework.modelling.command.ForwardMatchingInstances;
+import org.axonframework.eventsourcing.annotation.EventSourcingHandler;
+import org.axonframework.eventsourcing.annotation.EventSourcedEntity;
+import org.axonframework.messaging.commandhandling.annotation.CommandHandler;
+import org.axonframework.messaging.core.Message;
+import org.axonframework.messaging.core.MessageHandlerInterceptorChain;
+import org.axonframework.messaging.core.interception.annotation.ExceptionHandler;
+import org.axonframework.messaging.core.interception.annotation.MessageHandlerInterceptor;
+import org.axonframework.messaging.core.unitofwork.ProcessingContext;
+import org.axonframework.modelling.entity.annotation.EntityMember;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -41,24 +40,20 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-import static org.axonframework.modelling.command.AggregateLifecycle.apply;
-
-@AggregateRoot(type = "some_aggregate")
+@EventSourcedEntity
 public class SomeAggregate {
 
-    @AggregateMember(eventForwardingMode = ForwardMatchingInstances.class)
+    @EntityMember
     private final List<SomeAggregateChild> childList = new ArrayList<>();
-    @AggregateMember
+    @EntityMember
     private final Map<String, SomeAggregateChild> childMap = new HashMap<>();
-    @AggregateIdentifier
     private String id;
     private String status;
-    @AggregateMember
+    @EntityMember
     private SingleAggregateChild child;
 
-    @CommandHandler
     public SomeAggregate(SomeCommand command) {
-        apply(new SomeEvent(command.id()));
+        // Entity creation
     }
 
     public SomeAggregate() {
@@ -70,9 +65,11 @@ public class SomeAggregate {
         throw error;
     }
 
-    @CommandHandlerInterceptor
-    public Object intercept(Message<?> message, InterceptorChain chain) throws Exception {
-        return chain.proceed();
+    @SuppressWarnings("rawtypes")
+    @MessageHandlerInterceptor
+    public Object intercept(Message message, MessageHandlerInterceptorChain chain,
+                            ProcessingContext processingContext) throws Exception {
+        return chain.proceed(message, processingContext);
     }
 
     @CommandHandler
@@ -80,17 +77,16 @@ public class SomeAggregate {
         if (Objects.equals(status, command.newStatus())) {
             throw new IllegalStateException("new state should be different than current state");
         }
-        apply(new StatusChangedEvent(command.id(), command.newStatus()));
     }
 
     @CommandHandler
     public void handleAddToList(AddChildToListCommand command) {
-        apply(new ChildAddedToListEvent(command.id(), command.property()));
+        // left empty to not overcomplicate things
     }
 
     @CommandHandler
     public void handleAddToMap(AddChildToMapCommand command) {
-        apply(new ChildAddedToMapEvent(command.id(), command.key(), command.property()));
+        // left empty to not overcomplicate things
     }
 
     @EventSourcingHandler

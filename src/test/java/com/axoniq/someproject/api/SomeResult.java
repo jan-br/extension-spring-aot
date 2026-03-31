@@ -16,8 +16,6 @@
 
 package com.axoniq.someproject.api;
 
-import java.util.List;
-
 public record SomeResult(
         String id
 ) {

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2023. Axon Framework
+ * Copyright (c) 2010-2025. Axon Framework
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,10 +16,12 @@
 
 package org.axonframework.springboot.aot.autoconfig;
 
-import com.axoniq.someproject.api.SomeCommand;
-import org.axonframework.commandhandling.CommandMessage;
-import org.axonframework.commandhandling.GenericCommandMessage;
+import org.axonframework.messaging.commandhandling.CommandMessage;
+import org.axonframework.messaging.commandhandling.GenericCommandMessage;
+import org.axonframework.messaging.core.MessageType;
 import org.junit.jupiter.api.*;
+
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -34,8 +36,11 @@ class DefaultTargetResolverTest {
 
     @Test
     void returnGivenValue() {
-        DefaultTargetContextResolver<CommandMessage<?>> resolver = new DefaultTargetContextResolver<>(SOME_CONTEXT);
-        String result = resolver.resolveContext(new GenericCommandMessage<>(new SomeCommand("1")));
+        DefaultTargetContextResolver<CommandMessage> resolver = new DefaultTargetContextResolver<>(SOME_CONTEXT);
+        CommandMessage commandMessage = new GenericCommandMessage(
+                new MessageType("SomeCommand"), "payload", Map.of(), "routingKey", null
+        );
+        String result = resolver.resolveContext(commandMessage);
         assertEquals(SOME_CONTEXT, result);
     }
 }

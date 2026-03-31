@@ -16,10 +16,10 @@
 
 package com.axoniq.someproject.api;
 
-import org.axonframework.modelling.command.TargetAggregateIdentifier;
+import org.axonframework.modelling.annotation.TargetEntityId;
 
 public record ChangeStatusCommand(
-        @TargetAggregateIdentifier String id,
+        @TargetEntityId String id,
         String newStatus
 ) {
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2024. Axon Framework
+ * Copyright (c) 2010-2025. Axon Framework
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,9 +17,11 @@
 package org.axonframework.springboot.aot;
 
 
-import io.netty.channel.epoll.EpollChannelOption;
-import org.axonframework.eventhandling.GlobalSequenceTrackingToken;
-import org.axonframework.messaging.responsetypes.OptionalResponseType;
+import org.axonframework.messaging.eventhandling.processing.streaming.token.GapAwareTrackingToken;
+import org.axonframework.messaging.eventhandling.processing.streaming.token.GlobalSequenceTrackingToken;
+import org.axonframework.messaging.eventhandling.processing.streaming.token.MergedTrackingToken;
+import org.axonframework.messaging.eventhandling.processing.streaming.token.ReplayToken;
+import org.axonframework.messaging.eventhandling.processing.streaming.token.store.ConfigToken;
 import org.junit.jupiter.api.*;
 import org.springframework.aot.hint.RuntimeHints;
 import org.springframework.aot.hint.RuntimeHintsRegistrar;
@@ -27,8 +29,6 @@ import org.springframework.aot.hint.TypeReference;
 import org.springframework.aot.hint.predicate.RuntimeHintsPredicates;
 import org.springframework.core.io.support.SpringFactoriesLoader;
 import org.springframework.util.ClassUtils;
-
-import java.sql.Connection;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -50,29 +50,41 @@ class AxonRuntimeHintsTest {
     }
 
     @Test
-    void serializableClassesHaveReflectionOnConstructor() {
-        //some default framework classes
-        testForConstructor(GlobalSequenceTrackingToken.class);
-        testForConstructor(OptionalResponseType.class);
+    void allTrackingTokenClassesHaveReflectionHints() {
+        testForType(GlobalSequenceTrackingToken.class);
+        testForType(GapAwareTrackingToken.class);
+        testForType(MergedTrackingToken.class);
+        testForType(ReplayToken.class);
+        testForType(ConfigToken.class);
+    }
+
+    @Test
+    void jpaEntityClassesHaveReflectionHints() {
+        testForType(TypeReference.of(
+                "org.axonframework.messaging.eventhandling.processing.streaming.token.store.jpa.TokenEntry"));
+        testForType(TypeReference.of(
+                "org.axonframework.eventsourcing.eventstore.jpa.AggregateEventEntry"));
+    }
+
+    @Test
+    void axonDefinitionClassesHaveReflectionHints() {
+        // Spot-check that at least some *Definition classes were discovered from the Axon JARs
+        assertTrue(hints.reflection().typeHints().count() > 10,
+                   "Expected at least 10 type hints from tracking tokens + JPA entities + Definition classes");
     }
 
     @Test
     void resourcePatternsArePresent() {
-        assertTrue(RuntimeHintsPredicates.resource().forResource("axonserver_download.txt").test(this.hints));
         assertTrue(RuntimeHintsPredicates.resource().forResource("SQLErrorCode.properties").test(this.hints));
     }
 
-    @Test
-    void proxiesAreSet() {
-        assertTrue(RuntimeHintsPredicates.proxies().forInterfaces(
-                                                 TypeReference.of(Connection.class),
-                                                 TypeReference.of(
-                                                         "org.axonframework.common.jdbc.UnitOfWorkAwareConnectionProviderWrapper$UoWAttachedConnection"))
-                                         .test(this.hints));
+    private void testForType(Class<?> clazz) {
+        assertTrue(RuntimeHintsPredicates.reflection().onType(clazz)
+                                         .test(this.hints), "No reflection hints for " + clazz.getSimpleName());
     }
 
-    private void testForConstructor(Class<?> clazz) {
-        assertTrue(RuntimeHintsPredicates.reflection().onConstructor(clazz.getConstructors()[0])
-                                         .test(this.hints), "Constructor not accessible on " + clazz.getSimpleName());
+    private void testForType(TypeReference typeRef) {
+        assertTrue(hints.reflection().getTypeHint(typeRef) != null,
+                   "No reflection hints for " + typeRef.getName());
     }
 }

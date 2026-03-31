@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2023. Axon Framework
+ * Copyright (c) 2010-2025. Axon Framework
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,68 +16,40 @@
 
 package org.axonframework.springboot.aot.autoconfig;
 
-import jakarta.persistence.EntityManager;
 import org.axonframework.common.jpa.EntityManagerProvider;
 import org.axonframework.common.jpa.SimpleEntityManagerProvider;
 import org.junit.jupiter.api.*;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.test.context.runner.ApplicationContextRunner;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.test.context.ContextConfiguration;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.ApplicationContext;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Tests the {@link SimpleEntityManagerProviderAutoConfiguration} providing a {@link SimpleEntityManagerProvider}.
+ * Tests the {@link SimpleEntityManagerProviderAutoConfiguration} providing a
+ * {@link SimpleEntityManagerProvider} that replaces the default
+ * {@code ContainerManagedEntityManagerProvider} for native image compatibility.
  *
  * @author Gerard Klijs
  */
+@SpringBootTest(classes = SimpleEntityManagerProviderAutoConfigurationTest.TestContext.class)
 class SimpleEntityManagerProviderAutoConfigurationTest {
 
-    @Test
-    void defaultSimpleEntityManagerIsConfigured() {
-        new ApplicationContextRunner()
-                .withUserConfiguration(EmptyTestContext.class)
-                .withPropertyValues("axon.axonserver.enabled=false")
-                .run(context -> {
-                    EntityManagerProvider entityManagerProvider = context.getBean(EntityManagerProvider.class);
-                    assertNotNull(entityManagerProvider);
-                    assertTrue(entityManagerProvider instanceof SimpleEntityManagerProvider);
-                });
-    }
+    @Autowired
+    private ApplicationContext context;
 
     @Test
-    void customSimpleEntityManagerIsConfigured() {
-        new ApplicationContextRunner()
-                .withUserConfiguration(CustomEntityManagerContext.class)
-                .withPropertyValues("axon.axonserver.enabled=false")
-                .run(context -> {
-                    EntityManagerProvider entityManagerProvider = context.getBean(EntityManagerProvider.class);
-                    assertNotNull(entityManagerProvider);
-                    assertTrue(entityManagerProvider instanceof CustomEntityManagerContext.CustomEntityManagerProvider);
-                });
+    void simpleEntityManagerProviderIsConfigured() {
+        EntityManagerProvider entityManagerProvider = context.getBean(EntityManagerProvider.class);
+        assertNotNull(entityManagerProvider);
+        assertTrue(entityManagerProvider instanceof SimpleEntityManagerProvider,
+                   "Expected SimpleEntityManagerProvider but got " +
+                           entityManagerProvider.getClass().getName());
     }
 
     @EnableAutoConfiguration
-    private static class EmptyTestContext {
+    static class TestContext {
 
-    }
-
-    @EnableAutoConfiguration
-    private static class CustomEntityManagerContext {
-
-        @Bean
-        EntityManagerProvider customEntityManagerProvider() {
-            return new CustomEntityManagerProvider();
-        }
-
-
-        private static class CustomEntityManagerProvider implements EntityManagerProvider {
-            @Override
-            public EntityManager getEntityManager() {
-                return null;
-            }
-        }
     }
 }

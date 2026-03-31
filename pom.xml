@@ -19,7 +19,7 @@
 
     <groupId>org.axonframework.extensions.spring-aot</groupId>
     <artifactId>axon-spring-aot</artifactId>
-    <version>4.12.1-SNAPSHOT</version>
+    <version>5.1.0-RC2-SNAPSHOT</version>
 
     <modelVersion>4.0.0</modelVersion>
 
@@ -43,19 +43,18 @@
 
     <properties>
         <!-- Build / Plugins -->
-        <maven.compiler.source>17</maven.compiler.source>
-        <maven.compiler.target>17</maven.compiler.target>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
         <!-- Main -->
-        <axon.version>4.12.0</axon.version>
-        <spring.version>6.2.11</spring.version>
-        <spring-boot.version>3.5.4</spring-boot.version>
-        <!-- Database -->
-        <jakarta.persistence.version>3.1.0</jakarta.persistence.version>
+        <axon.version>5.1.0-RC2</axon.version>
+        <axon-spring.version>5.1.0-RC2</axon-spring.version>
+        <spring.version>7.0.6</spring.version>
+        <spring-boot.version>4.0.5</spring-boot.version>
         <!-- Serialization -->
-        <jackson.version>2.19.2</jackson.version>
+        <jackson.version>3.1.0</jackson.version>
         <!-- Testing -->
         <assertj.version>3.27.7</assertj.version>
-        <junit.jupiter.version>5.13.4</junit.jupiter.version>
+        <junit.jupiter.version>6.0.3</junit.jupiter.version>
         <mockito.version>5.18.0</mockito.version>
         <netty.version>4.2.3.Final</netty.version>
         <!-- Build / Plugin -->
@@ -89,8 +88,13 @@
     <dependencies>
         <!-- Axon -->
         <dependency>
-            <groupId>org.axonframework</groupId>
+            <groupId>org.axonframework.extensions.spring</groupId>
             <artifactId>axon-spring</artifactId>
+            <version>${axon-spring.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.axonframework</groupId>
+            <artifactId>axon-eventsourcing</artifactId>
             <version>${axon.version}</version>
         </dependency>
         <dependency>
@@ -100,9 +104,9 @@
             <optional>true</optional>
         </dependency>
         <dependency>
-            <groupId>org.axonframework</groupId>
+            <groupId>org.axonframework.extensions.spring</groupId>
             <artifactId>axon-spring-boot-autoconfigure</artifactId>
-            <version>${axon.version}</version>
+            <version>${axon-spring.version}</version>
             <scope>test</scope>
         </dependency>
         <!-- Spring -->
@@ -144,12 +148,6 @@
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-data-jpa</artifactId>
-            <version>${spring-boot.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
             <version>${spring-boot.version}</version>
             <scope>test</scope>
@@ -160,14 +158,19 @@
                 </exclusion>
             </exclusions>
         </dependency>
-        <!-- Gson is only there to ensure we have a Spring-compatible version instead of pulling in an older version through the axon-server connector, transitively. -->
-        <!-- The Gson dependency can be removed once we're on an Axon Server Connector version with an upgraded gRPC version. -->
-        <dependency>
-            <groupId>com.google.code.gson</groupId>
-            <artifactId>gson</artifactId>
-            <version>2.13.1</version>
-        </dependency>
         <!-- Database -->
+        <dependency>
+            <groupId>jakarta.persistence</groupId>
+            <artifactId>jakarta.persistence-api</artifactId>
+            <version>3.2.0</version>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>org.axonframework</groupId>
+            <artifactId>axon-common</artifactId>
+            <version>${axon.version}</version>
+            <optional>true</optional>
+        </dependency>
         <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
@@ -175,14 +178,14 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>jakarta.persistence</groupId>
-            <artifactId>jakarta.persistence-api</artifactId>
-            <version>${jakarta.persistence.version}</version>
-            <optional>true</optional>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-jpa</artifactId>
+            <version>${spring-boot.version}</version>
+            <scope>test</scope>
         </dependency>
         <!-- Serialization -->
         <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
+            <groupId>tools.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
             <version>${jackson.version}</version>
             <optional>true</optional>
@@ -417,13 +420,78 @@
                 </plugins>
             </build>
         </profile>
+        <profile>
+            <id>native-test</id>
+            <dependencies>
+                <dependency>
+                    <groupId>org.junit.platform</groupId>
+                    <artifactId>junit-platform-launcher</artifactId>
+                    <scope>test</scope>
+                </dependency>
+            </dependencies>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.springframework.boot</groupId>
+                        <artifactId>spring-boot-maven-plugin</artifactId>
+                        <version>${spring-boot.version}</version>
+                        <executions>
+                            <execution>
+                                <id>process-test-aot</id>
+                                <goals>
+                                    <goal>process-test-aot</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.hibernate.orm</groupId>
+                        <artifactId>hibernate-maven-plugin</artifactId>
+                        <version>7.2.7.Final</version>
+                        <executions>
+                            <execution>
+                                <id>enhance</id>
+                                <goals>
+                                    <goal>enhance</goal>
+                                </goals>
+                                <configuration>
+                                    <enableAssociationManagement>true</enableAssociationManagement>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.graalvm.buildtools</groupId>
+                        <artifactId>native-maven-plugin</artifactId>
+                        <version>1.0.0</version>
+                        <extensions>true</extensions>
+                        <executions>
+                            <execution>
+                                <id>test-native</id>
+                                <goals>
+                                    <goal>test</goal>
+                                </goals>
+                                <phase>test</phase>
+                            </execution>
+                        </executions>
+                        <configuration>
+                            <buildArgs>
+                                <buildArg>--initialize-at-run-time=io.grpc.netty.shaded.io.netty</buildArg>
+                                <buildArg>-H:+UnlockExperimentalVMOptions</buildArg>
+                                <buildArg>-H:ServiceLoaderFeatureExcludeServices=org.hibernate.bytecode.spi.BytecodeProvider</buildArg>
+                            </buildArgs>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
     </profiles>
 
     <scm>
         <connection>scm:git:git://github.com/AxonFramework/extension-spring-aot.git</connection>
         <developerConnection>scm:git:git@github.com:AxonFramework/extension-spring-aot.git</developerConnection>
         <url>https://github.com/AxonFramework/extension-spring-aot</url>
-        <tag>axon-spring-aot-4.12.0</tag>
+        <tag>HEAD</tag>
     </scm>
 
     <developers>

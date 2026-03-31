@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2023. Axon Framework
+ * Copyright (c) 2010-2025. Axon Framework
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,7 +32,7 @@ import org.springframework.context.annotation.Bean;
  * @since 4.8.0
  */
 @AutoConfiguration
-@AutoConfigureBefore(name = "org.axonframework.springboot.autoconfig.AxonServerAutoConfiguration")
+@AutoConfigureBefore(name = "org.axonframework.extension.springboot.autoconfig.AxonServerAutoConfiguration")
 @ConditionalOnClass(AxonServerConfiguration.class)
 public class DefaultTargetContextResolverAutoConfiguration {
 

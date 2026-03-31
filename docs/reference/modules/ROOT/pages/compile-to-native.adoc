@@ -1,17 +1,50 @@
 :navtitle: Compiling to Native
 = Compiling to Native
 
-Before you set up this extension, it's important to read through the link:https://docs.spring.io/spring-boot/docs/current/reference/html/native-image.html[documentation,window=_blank,role=external] from Spring itself. There are some known limitations that might require additional changes to the application. In addition, this extension needs to be added by adding the following dependency:
+Before you set up this extension, it's important to read through the link:https://docs.spring.io/spring-boot/reference/packaging/native-image/index.html[documentation,window=_blank,role=external] from Spring itself. There are some known limitations that might require additional changes to the application. In addition, this extension needs to be added by adding the following dependency:
 
+For Maven:
 
 [source,xml]
 ----
 <dependency>
-<groupId>org.axonframework.extensions.spring-aot</groupId>
-<artifactId>axon-spring-aot</artifactId>
-<version>4.8.0</version>
+    <groupId>org.axonframework.extensions.spring-aot</groupId>
+    <artifactId>axon-spring-aot</artifactId>
+    <version>5.1.0-RC2-SNAPSHOT</version>
 </dependency>
 ----
 
-This should be enough to have additional hints with ahead of time compilation to successfully build and run your Axon application.
+For Gradle:
 
+[source,kotlin]
+----
+implementation("org.axonframework.extensions.spring-aot:axon-spring-aot:5.1.0-RC2-SNAPSHOT")
+----
+
+This extension automatically registers runtime hints for:
+
+- Axon Framework handler annotations and their payload types (`@CommandHandler`, `@EventHandler`, `@QueryHandler`, `@EventSourcingHandler`)
+- `@EntityMember` child entity discovery (List, Map, direct field)
+- Tracking token and JPA entity serialization classes
+- Axon internal `*Definition` classes used by `ConstructorUtils`
+- Axon Server gRPC protobuf classes for event channel communication
+- A native-image-compatible `FactoryBasedEntityManagerProvider` to replace `ContainerManagedEntityManagerProvider`
+- A non-lambda `TargetContextResolver` for Axon Server connectivity
+
+For Gradle-based projects, ensure you also have the Hibernate ORM plugin for build-time bytecode enhancement:
+
+[source,kotlin]
+----
+plugins {
+    id("org.hibernate.orm") version "7.2.7.Final"
+    id("org.graalvm.buildtools.native") version "1.0.0"
+}
+
+hibernate {
+    enhancement {
+        enableAssociationManagement = true
+    }
+}
+----
+
+This should be enough to have additional hints with ahead of time compilation to successfully build and run your Axon application.

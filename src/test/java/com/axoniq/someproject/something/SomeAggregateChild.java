@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2023. Axon Framework
+ * Copyright (c) 2010-2025. Axon Framework
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,11 +18,11 @@ package com.axoniq.someproject.something;
 
 import com.axoniq.someproject.SomeBean;
 import com.axoniq.someproject.api.SomeChildCommand;
-import org.axonframework.commandhandling.CommandHandler;
-import org.axonframework.modelling.command.EntityId;
+import org.axonframework.messaging.commandhandling.annotation.CommandHandler;
+import org.axonframework.modelling.annotation.TargetEntityId;
 
 public record SomeAggregateChild(
-        @EntityId String id,
+        @TargetEntityId String id,
         String property
 ) {
 

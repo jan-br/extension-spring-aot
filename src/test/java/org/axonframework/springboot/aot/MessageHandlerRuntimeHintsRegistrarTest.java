@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2023. Axon Framework
+ * Copyright (c) 2010-2025. Axon Framework
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,10 +16,13 @@
 
 package org.axonframework.springboot.aot;
 
+import com.axoniq.someproject.api.AddChildToListCommand;
+import com.axoniq.someproject.api.AddChildToMapCommand;
 import com.axoniq.someproject.api.ChangeStatusCommand;
+import com.axoniq.someproject.api.ChildAddedToListEvent;
+import com.axoniq.someproject.api.ChildAddedToMapEvent;
 import com.axoniq.someproject.api.SingleChildCommand;
 import com.axoniq.someproject.api.SomeChildCommand;
-import com.axoniq.someproject.api.SomeCommand;
 import com.axoniq.someproject.api.SomeEvent;
 import com.axoniq.someproject.api.SomeProjectionEvent;
 import com.axoniq.someproject.api.SomeQuery;
@@ -30,8 +33,6 @@ import com.axoniq.someproject.something.SomeAggregate;
 import com.axoniq.someproject.something.SomeAggregateChild;
 import com.axoniq.someproject.something.SomeProjectionWithGroupAnnotation;
 import com.axoniq.someproject.something.SomeProjectionWithoutGroupAnnotation;
-import org.axonframework.modelling.command.ForwardMatchingInstances;
-import org.axonframework.modelling.command.ForwardToAll;
 import org.junit.jupiter.api.*;
 import org.springframework.aot.hint.predicate.RuntimeHintsPredicates;
 import org.springframework.aot.test.generate.TestGenerationContext;
@@ -60,47 +61,80 @@ class MessageHandlerRuntimeHintsRegistrarTest {
     }
 
     @Test
-    void objectsUsedInHandlersHaveReflectiveAccessToConstructor() {
+    void commandHandlerPayloadTypesHaveReflectiveAccessToConstructor() {
         testForConstructor(ChangeStatusCommand.class);
-        testForConstructor(SomeCommand.class);
-        testForConstructor(SomeEvent.class);
-        testForConstructor(SomeProjectionEvent.class);
-        testForConstructor(SomeQuery.class);
-        testForConstructor(SomeResult.class);
-        testForConstructor(StatusChangedEvent.class);
-        //the ones from the aggregate childs
+        testForConstructor(AddChildToListCommand.class);
+        testForConstructor(AddChildToMapCommand.class);
+        // child entity command payloads
         testForConstructor(SingleChildCommand.class);
         testForConstructor(SomeChildCommand.class);
     }
 
     @Test
-    void handlerMethodsHaveReflectiveHints() {
-        testForConstructor(SomeAggregate.class);
+    void eventSourcingHandlerPayloadTypesHaveReflectiveAccessToConstructor() {
+        testForConstructor(SomeEvent.class);
+        testForConstructor(StatusChangedEvent.class);
+        testForConstructor(ChildAddedToListEvent.class);
+        testForConstructor(ChildAddedToMapEvent.class);
+    }
+
+    @Test
+    void eventHandlerPayloadTypesHaveReflectiveAccessToConstructor() {
+        testForConstructor(SomeProjectionEvent.class);
+    }
+
+    @Test
+    void queryHandlerPayloadAndResultTypesHaveReflectiveAccessToConstructor() {
+        testForConstructor(SomeQuery.class);
+        // SomeResult is the return type of the @QueryHandler, registered via QueryHandlingMember.resultType()
+        testForConstructor(SomeResult.class);
+    }
+
+    @Test
+    void commandHandlerMethodsHaveReflectiveHints() {
         testReflectionMethod(SomeAggregate.class, "handle");
+        testReflectionMethod(SomeAggregate.class, "handleAddToList");
+        testReflectionMethod(SomeAggregate.class, "handleAddToMap");
+    }
+
+    @Test
+    void eventSourcingHandlerMethodsHaveReflectiveHints() {
         testReflectionMethod(SomeAggregate.class, "onSomeEvent");
         testReflectionMethod(SomeAggregate.class, "onStatusChangedEvent");
+    }
+
+    @Test
+    void eventAndQueryHandlerMethodsHaveReflectiveHints() {
         testReflectionMethod(SomeProjectionWithGroupAnnotation.class, "handle");
         testReflectionMethod(SomeProjectionWithGroupAnnotation.class, "on");
         testReflectionMethod(SomeProjectionWithoutGroupAnnotation.class, "handle");
         testReflectionMethod(SomeProjectionWithoutGroupAnnotation.class, "on");
-        testReflectionMethod(SingleAggregateChild.class, "handle");
-        testReflectionMethod(SomeAggregateChild.class, "handle");
     }
 
     @Test
-    void handlerInterceptorsHaveReflectiveHints() {
+    void messageHandlerInterceptorsHaveReflectiveHints() {
         testReflectionMethod(SomeAggregate.class, "intercept");
-        testReflectionMethod(SomeAggregate.class, "exceptionHandler");
         testReflectionMethod(SingleAggregateChild.class, "intercept");
     }
 
     @Test
-    void childEntitiesHaveReflectiveHints() {
-        testReflectionMethod(SomeAggregateChild.class, "handle");
-        testReflectionMethod(SingleAggregateChild.class, "intercept");
+    void exceptionHandlersHaveReflectiveHints() {
+        testReflectionMethod(SomeAggregate.class, "exceptionHandler");
+    }
+
+    @Test
+    void entityMemberChildEntitiesAreDiscovered() {
+        // SingleAggregateChild is a direct @EntityMember field
+        testForConstructor(SingleAggregateChild.class);
         testReflectionMethod(SingleAggregateChild.class, "handle");
-        testForConstructor(ForwardMatchingInstances.class);
-        testForConstructor(ForwardToAll.class);
+        // SomeAggregateChild is in both a List and Map @EntityMember field
+        testForConstructor(SomeAggregateChild.class);
+        testReflectionMethod(SomeAggregateChild.class, "handle");
+    }
+
+    @Test
+    void entitySourcedEntityClassHasReflectiveHints() {
+        testForConstructor(SomeAggregate.class);
     }
 
     private void addClassToBeanFactory(Class<?> clazz) {

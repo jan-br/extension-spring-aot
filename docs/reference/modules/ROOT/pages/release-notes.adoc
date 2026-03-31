@@ -1,40 +1,31 @@
 = Release Notes Spring AOT Extension
 :navtitle: Release notes
 
-You can find the release notes for the Spring AOT Extension of version 4.10 onward, below.
-For earlier releases, please go to the link:https://legacydocs.axoniq.io/reference-guide/release-notes/rn-extensions/rn-spring-aot[legacy documentation].
+You can find the release notes for the Spring AOT Extension below.
 
-== Release 4.12.0
+== Release 5.1.0-RC2
 
-Upgrades the Spring AOT Extension to be compatible with Axon Framework 4.12.0, and updates various dependencies.
+Major upgrade of the Spring AOT Extension to support Axon Framework 5, Spring Boot 4, and Spring Framework 7.
 
-See the link:https://github.com/AxonFramework/extension-spring-aot/releases/tag/axon-spring-aot-4.12.0[GitHub release notes] for an exhaustive list of all changes.
+=== Highlights
 
-== Release 4.11.0
+- Upgraded to Axon Framework 5.1.0-RC2, Spring Boot 4.0.5, Spring Framework 7.0.6, Java 21
+- Updated all package references for Axon 5's restructured module layout (`org.axonframework.messaging.core`, `org.axonframework.modelling.entity`, `org.axonframework.extension.spring`)
+- Added dynamic scanning of Axon `*Definition` classes for reflection registration
+- Added JPA entity hints for `TokenEntry`, `AggregateEventEntry`
+- Added gRPC protobuf class scanning for Axon Server connector
+- Replaced `SimpleEntityManagerProvider` with `FactoryBasedEntityManagerProvider` for native image compatibility
+- Removed stale gRPC/Netty native-image configuration (gRPC 1.79+ ships its own)
+- Removed `ResourceInjectorAutoConfiguration` (saga support removed in Axon 5)
+- Updated Jackson dependency to Jackson 3 (`tools.jackson.core`)
+- Updated JUnit to 6.0.3 for Spring Boot 4 compatibility
 
-Upgrades the Spring AOT Extension to be compatible with Axon Framework 4.11.0, and updates various dependencies.
+=== Breaking changes
 
-See the link:https://github.com/AxonFramework/extension-spring-aot/releases/tag/axon-spring-aot-4.11.0[GitHub release notes] for an exhaustive list of all changes.
+- Requires Java 21 or later (was Java 17)
+- Requires Spring Boot 4 (was Spring Boot 3)
+- Requires Axon Framework 5.1 (was Axon Framework 4.x)
 
-== Release 4.10.0
+== Earlier releases
 
-Upgrades the Spring AOT Extension to be compatible with Axon Framework 4.10.0, and updates various dependencies.
-
-See the link:https://github.com/AxonFramework/extension-spring-aot/releases/tag/axon-spring-aot-4.10.0[GitHub release notes] for an exhaustive list of all changes.
-
-== Patch releases
-
-=== Release 4.10.1
-
-====  Bug fixes
-
-- Added native-compilation hints for reflection link:https://github.com/AxonFramework/extension-spring-aot/pull/197[#197]
-- Aggregate member causes errors in running Spring Boot AOT application link:https://github.com/AxonFramework/extension-spring-aot/issues/193[#193]
-- Command handler interceptor causes errors in running Spring Boot AOT application link:https://github.com/AxonFramework/extension-spring-aot/issues/192[#192]
-- Spring AOT doesn't work when using custom or spring beans as parameters in handler methods link:https://github.com/AxonFramework/extension-spring-aot/issues/183[#183]
-
-==== Contributors
-
-We'd like to thank all the contributors who worked on this release:
-
-- link:https://github.com/abuijze[@abuijze]
+For Axon Framework 4.x release notes, please go to the link:https://legacydocs.axoniq.io/reference-guide/release-notes/rn-extensions/rn-spring-aot[legacy documentation].

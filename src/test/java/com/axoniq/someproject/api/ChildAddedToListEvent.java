@@ -16,8 +16,6 @@
 
 package com.axoniq.someproject.api;
 
-import org.axonframework.modelling.command.TargetAggregateIdentifier;
-
 public record ChildAddedToListEvent(
         String id,
         String property

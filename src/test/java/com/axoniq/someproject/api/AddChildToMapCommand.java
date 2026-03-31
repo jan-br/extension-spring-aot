@@ -16,10 +16,10 @@
 
 package com.axoniq.someproject.api;
 
-import org.axonframework.modelling.command.TargetAggregateIdentifier;
+import org.axonframework.modelling.annotation.TargetEntityId;
 
 public record AddChildToMapCommand(
-        @TargetAggregateIdentifier String id,
+        @TargetEntityId String id,
         String key,
         String property
 ) {

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2023. Axon Framework
+ * Copyright (c) 2010-2025. Axon Framework
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,28 +21,27 @@ import jakarta.persistence.EntityManagerFactory;
 import org.axonframework.common.jpa.EntityManagerProvider;
 import org.axonframework.common.jpa.SimpleEntityManagerProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
-import org.springframework.boot.autoconfigure.AutoConfigureAfter;
-import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Primary;
 
 /**
- * Configuration to provide a {@link SimpleEntityManagerProvider} instead of the
- * {@code ContainerManagedEntityManagerProvider} which doesn't work when compiled ahead of time.
+ * Replaces Axon's {@code ContainerManagedEntityManagerProvider} (which uses {@code @PersistenceContext} setter
+ * injection that doesn't work in native image) with {@link SimpleEntityManagerProvider} backed by a
+ * Spring-injected {@link EntityManager}.
  *
  * @author Gerard Klijs
  * @since 4.8.0
  */
-@AutoConfiguration
-@AutoConfigureBefore(name = "org.axonframework.springboot.autoconfig.JpaAutoConfiguration")
-@AutoConfigureAfter(name = "org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration")
+@AutoConfiguration(
+        afterName = "org.axonframework.extension.springboot.autoconfig.JpaAutoConfiguration"
+)
 @ConditionalOnBean(EntityManagerFactory.class)
 public class SimpleEntityManagerProviderAutoConfiguration {
 
-    @ConditionalOnMissingBean
     @Bean
-    public EntityManagerProvider entityManagerProvider(EntityManager entityManager) {
+    @Primary
+    public EntityManagerProvider simpleEntityManagerProvider(EntityManager entityManager) {
         return new SimpleEntityManagerProvider(entityManager);
     }
 }

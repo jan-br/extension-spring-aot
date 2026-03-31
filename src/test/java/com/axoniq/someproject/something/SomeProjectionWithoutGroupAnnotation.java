@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2023. Axon Framework
+ * Copyright (c) 2010-2025. Axon Framework
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,8 +19,8 @@ package com.axoniq.someproject.something;
 import com.axoniq.someproject.api.SomeProjectionEvent;
 import com.axoniq.someproject.api.SomeQuery;
 import com.axoniq.someproject.api.SomeResult;
-import org.axonframework.eventhandling.EventHandler;
-import org.axonframework.queryhandling.QueryHandler;
+import org.axonframework.messaging.eventhandling.annotation.EventHandler;
+import org.axonframework.messaging.queryhandling.annotation.QueryHandler;
 
 import java.util.ArrayList;
 import java.util.List;

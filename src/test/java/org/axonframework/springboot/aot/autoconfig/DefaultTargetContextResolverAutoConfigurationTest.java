@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2023. Axon Framework
+ * Copyright (c) 2010-2025. Axon Framework
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,9 +18,12 @@ package org.axonframework.springboot.aot.autoconfig;
 
 import org.axonframework.axonserver.connector.TargetContextResolver;
 import org.junit.jupiter.api.*;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.test.context.runner.ApplicationContextRunner;
-import org.springframework.test.context.ContextConfiguration;
+import org.springframework.boot.hibernate.autoconfigure.HibernateJpaAutoConfiguration;
+import org.springframework.boot.jdbc.autoconfigure.DataSourceAutoConfiguration;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.ApplicationContext;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -29,24 +32,24 @@ import static org.junit.jupiter.api.Assertions.*;
  *
  * @author Gerard Klijs
  */
+@SpringBootTest(classes = DefaultTargetContextResolverAutoConfigurationTest.TestContext.class)
 class DefaultTargetContextResolverAutoConfigurationTest {
+
+    @Autowired
+    private ApplicationContext context;
 
     @Test
     void defaultContextResolverIsPresent() {
-        new ApplicationContextRunner()
-                .withUserConfiguration(TestContext.class)
-                .withPropertyValues("axon.axonserver.enabled=false")
-                .run(context -> {
-                    TargetContextResolver<?> resolver = context.getBean(TargetContextResolver.class);
-                    assertNotNull(resolver);
-                    assertTrue(resolver instanceof DefaultTargetContextResolver);
-                });
+        TargetContextResolver<?> resolver = context.getBean(TargetContextResolver.class);
+        assertNotNull(resolver);
+        assertTrue(resolver instanceof DefaultTargetContextResolver);
     }
 
-
-    @ContextConfiguration
-    @EnableAutoConfiguration
-    private static class TestContext {
+    @EnableAutoConfiguration(exclude = {
+            DataSourceAutoConfiguration.class,
+            HibernateJpaAutoConfiguration.class
+    })
+    static class TestContext {
 
     }
 }
